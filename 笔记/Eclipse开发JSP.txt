@@ -1,0 +1,218 @@
+1. 在Eclipse中创建的Web项目：
+	浏览器可以直接访问WebContent中的文件，		
+	例如http://localhost:8888/MyJspProject/index1.jsp
+	其中的index1.jsp就在WebContent目录中
+	但是WEB-INF中的文件  无法通过客户端（浏览器）直接访问，只能通过请求转发来访问
+注意：并不是任何的内部跳转都能访问WEB-INF：原因是 跳转有2种方式：请求转发，  重定向
+2.配置tomcat运行时环境
+jsp<->Servlet
+
+a.将tomcat/lib中的servlet-api.jar加入项目的构建路径  add to bulidpath
+
+b.右键项目  buildpath  -->Libraries  -->Add Library-->Server Runtime  next  -->tomcat 
+
+
+3.统一字符集编码
+a.编码分类：
+	设置jsp文件的编码（jsp文件中的pageEncoding属性）： jsp->java
+	设置浏览器读取jsp文件的编码（jsp文件中的content属性）
+	一般将上述设置成一致的编码，utf-8
+文本编码：
+	1.将整个eclipse中的文件  统一设置  window-->Preferences-->jspFiles -->Encoding改为utf-8
+	2.设置某一个项目 
+	3.设置某一个文件
+
+4.部署tomcat
+在servers面板 新建一个tomcat实例，在该实例中 部署项目（右键add）之后运行
+注意：一般建议 将eclipse中的tomcat与本地tomcat的配置保持一致：即将eclipse中的tomcat设置为托管模式  （【第一次】创建tomcat实例之后，双击，选择Server Location 的第二项）
+
+
+5.
+JSP的页面元素：	HTML  JAVA代码（脚本Scriptlet），指令，注释
+a.脚本Scriptlet
+	i.
+		<%
+			定义局部变量，Java语句
+		%>
+
+	ii. 
+		<%!
+		定义全局变量，方法
+		%>
+	iii.
+		<%=
+		输出表达式
+		
+		%>
+
+一般而言，修改web.xml  配置文件，java  需要重启tomcat服务
+	但是如果修改Jsp/html/css/js,不需要重启
+b.指令
+page指定的属性：
+		<%@ page language="java" contentType="text/html; charset=UTF-8"  pageEncoding="UTF-8"  import = "java.util.Date"%>
+	language：jsp页面使用的脚本语言
+	import：导入类
+	pageEncodiong：jsp文件自身编码  jsp ->java
+	contentType: 浏览器解析jsp的编码
+
+c.注释
+	html注释<!-- --> ,可以被客户 通过浏览器查看源码 
+	java注释 //     /*...  */
+	jsp注释  <%--   --%>
+
+7.JSP九大内置对象（自带的，不需要new  也能使用）
+out
+	输出对象，想客户端输出内容
+request
+	请求对象，存储“客户端向服务端发送的请求信息”
+	常见方法：
+		String	getParameter(String name) : 根据请求的字段名key (input 标签的name属性值)，返回字段值value (input 标签的value属性值)       //强制转换成int型 int =  Integer.parseInt(...);
+	   	String[]	getParameterValues(String name) :根据请求的字段名key，返回多个字段值value （checkbox）
+		void	setCharacterEncoding("编码格式utf-8")  设置post请求方式编码 （tomcat7以前默认iso-8859-1，tomcat8以后改为了utf-8）
+			getRequestDispatcher("b.jsp")forward(request,response);   请求转发 的方式跳转   A->B
+	   	ServletContext  getServerContext(); 获取项目的ServletContext对象
+
+	get提交方式：method="get"  和  地址栏请求方式（xxx.jsp?uname = aa&upwd = asd）超链接（<a href="xx">）  默认都属于get提交方式
+	post提交方式与get提交方式的区别：
+		1. post不会在地址栏显示信息；（地址栏能容纳的信息有限 4-5kb  ，如果请求数据存在大文件，图片等  会出现地址栏无法容纳全部的数据而出错）
+		2.文件上传操作，必须是post （推荐post）
+
+response 
+	响应对象
+	常见方法：
+		void addCookie(Cookie cookie ); 服务端向客户端增加cookie对象
+		void sendRedirect("xxx.jsp")   throws IOException ;    页面跳转的一种方式（重定向）
+		void setContetType("utf-8")  设置服务端响应的编码 （设置服务端的contentType类型）
+
+
+	   	getRequestDispatcher("b.jsp")forward(request,response);			 response.sendRedirect("xxx.jsp")   throws IOException ;  
+				请求转发								重定向
+
+地址栏是否改变		 	  不变								 改变	
+是否保留第一次请求时的数据		  保留								不保留
+请求次数				    1次								  2次
+
+转发，重定向：
+	转发：张三（客户端）-->【服务窗口 A（服务端）-->服务窗口B】
+	重定向：张三（客户端） -->服务窗口A（服务端）-->去找B
+	             张三（客户端）-->服务窗口B（服务端）-->结束
+
+
+
+
+
+session（在服务端）
+	Cookie（客户端，不是内置对象，使用时必须new）：Cookie是由服务端产生，再发送给客户端保存    （相当于本地访存的作用：客户端-->服务端）
+		作用：提高访问服务端的效率，但是安全性较差。
+		建议:cookie中不加中文
+	Cookie：key =value
+	javax.servlet.http.Cookie
+	public Cookie (String key,String value)	Cookie cookie = new Cookie("name","zs");
+	String getName()  获取key
+	String getValue()  获取value
+	void setMaxAge(int expiry)  最大有效期（秒）
+服务端准备Cookie：
+	response.addCookie(Cookie cookie)		Cookie[]  cookies  = request.getCookies();  获取Cookie
+	页面直接跳转（转发，重定向）
+
+
+客户端获取Cookie：
+	request.getCookies();  只能获取全部Cookie
+
+	使用Cookie实现  记住用户名 功能
+		String uname;
+			Cookie[]  cookies = request.getCookies();
+			for(Cookie cookie:coookies){
+			if(cookie.getName().equals("uname"));
+				uname = cooike.getValue();
+			}
+	     用户名 ：<input type = "text"  name = "uname"  value="<%=(uname==null?"":uname)")%>">
+session:会话
+a.浏览网站：开始-关闭
+b.购物：浏览-付款-退出
+c.电子邮件：浏览-写邮件-退出
+	开始-结束
+session机制：
+	客户端第一次请求服务端时，（jessionid-sessionid匹配  匹配失败）服务端会产出一个session对象（保存该客户信息），并且每个session对象 都会有一个唯一的sessionId（区分其他session）
+	服务端会产生一个Cookie ，并且 该cookie的name = JESSIONID ,value= 服务端sessionId的值
+	然后 服务端会在响应客户端的同时 将该cookie发送给客户端，至此 客户端就有了个cookie（JESSIONID）
+	因此 ，客户端的cookie就可以和服务端的session一一对应（JESSIONID - sessionID）保证每一个用户一个session
+	客户端第二次/n次 请求服务端时：服务端会先用客户端cookie中的JESSIONID 去服务端的session中匹配sessionid，如果匹配成功（cookie jessionid 和session sessionid）
+				说明次用户不是第一次访问无需登录
+session：
+	session存储在服务端
+	session是在同一个用户（客户）请求时共享
+	实现机制：第一次客户请求是产生一个sessionid 并复制给cookie的jessionid 然后发送给客户端。最终通过session的sessionid---cookie的jessionid 实现一一对应
+
+session方法：
+	String getId();  获取sessionId
+	boolean isNes() 判断是否是  新用户（第一次访问）
+	void invalidate()  使session失效（退出，注销）
+	void setMaxInctiveInterval(秒) 设置最大有效  非活动时间
+	int getMaxInctiveInterval()  获取最大有效  非活动时间
+	
+	void   setAttribute();
+	Object getAttribute();
+			  
+			session                    cookie
+保存的位置		服务端  	                客户端
+安全性			较安全	               较不安全
+保存的内容		Object		String
+
+application  
+	全局对象
+	常见方法：
+		String getContextPath()  获取虚拟路径
+		String getRealPath()   绝对路径（虚拟路径对应的绝对路径）
+
+
+pageContext
+	JSP页面容器
+config   
+	配置对象（服务器配置信息）
+page	
+	当前jsp页面对象（相当于Java中的this）
+exception	
+	异常对象
+
+
+四种范围对象（小->大）
+pageContext  JSP页面容器    （page对象）	当前页面有效
+request     请求对象				同一次请求有效
+session	会话对象				同一次会话有效
+appliation 全局对象				全局有效（整个项目有效）
+	
+以上四个对象共有的方法：
+Object getAttribute(String name )  :根据属性名 获取属性值
+void  setAttribute(String name ,Object  obj) 设置属性值      setAttribute("a","b");   如果a对象之前不存在，则新建一个a对象
+								如果a之前已经存在，则将a的值改为b
+void  removeAttribute(String name )  根据属性名删除对象 
+
+a.pageContext    当前页面有效（页面跳转后无效）
+b.request    同一次请求有效，其他请求无效（请求转发后有效，重定向后无效）
+c.session 同一次会话有效（无论怎么跳转，都有效，关闭/切换浏览器后无效：从 登录->退出之间 都有效）
+d.appliation 全局变量  整个项目运行期间都有效（切换浏览器 也有效） 。关闭服务，其他项目 无效
+
+
+
+
+8.统一请求的编码 request
+get方式请求  如果出现乱码，解决：
+		tomcat7（iso-8859-1）
+		utf-8
+a、统一每一个变量的编码
+	name = new  String(name.getBytes("iso-8859-1"),"utf-8");
+
+b.修改server.xml ，一次性的更改tomcat默认get提交方式的编码（改为utf-8）
+	conf/server.xml   --><Connector connectionTimeout="20000" port="8888" protocol="HTTP/1.1" redirectPort="8443"  URIEncoding = "utf-8"/>
+
+设置post编码：
+	request.setCharacterEncoding("utf-8")；
+
+
+
+
+
+
+
+

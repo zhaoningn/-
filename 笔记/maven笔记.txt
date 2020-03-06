@@ -1,0 +1,250 @@
+1.maven的作用
+a、管理Jar
+	i、增加第三方Jar（commons -fileupload.jar   commons-io.jar）
+	ii、jar包之间的依赖关系(commons-fileupload.jar  自动关联下载所有依赖的Jar  并且不会冲突) 
+
+b、将项目拆分成若干个模块
+
+2.Maven概念：
+	是一个基于Java平台的  自动化构建工具
+	make-ant-maven-gradle
+
+	编译+打包+部署+测试  --->自动构建
+
+清理：删除编译的结果，为重新编译做准备
+编译：java->class
+测试：针对于 项目中的关键点进行测试，亦可用 项目中的测试代码 去测试开发代码
+报告：将测试的结果 进行显示
+打包：将项目中包含的多个文件 压缩成一个文件 ，用于安装或部署（java项目打成jar包   web项目打成war包）
+安装：将打成的包 放到 本地仓库   供其他项目使用
+部署：将打成的包 放到 服务器上准备运行（将java，js , jsp等各个文件进行筛选，组装，变成一个可以直接运行的项目）
+				大米->米饭
+	-Eclipse中部署的web项目可以运行
+	-将Eclipse中的项目，复制到tomcat/webapps中则不能运行
+	-项目可以在webappas中直接运行
+	
+	Eclipse中的项目，在部署时会生成一个对应的 部署项目（在wtpwebapps中），区别在于：部署项目 没有源码文件src（java），只有编译后的class文件和jsp文件
+	   因为二者目录结构不一致，因此tomcat中无法直接运行Eclipse中复制过来的项目（因为如果要在tomcat中运行一个项目，则该项目  必须严格遵循tomcat的目录结构）
+	Eclipse中的项目 要在tomcat中运行，就需要部署：a、通过Eclipse部署
+					            b、将web项目打成war包，然后将该war包复制到tomcat/webapps中  即可直接运行
+
+自动化构建工具maven：将原材料（java  js  css   html   图片） -> 产品（可发布的项目）
+
+maven方式：通常下载一个jar，先到本地仓库中下载； 如果本地仓库中不存在，则再联网到中央仓库（镜像）去下载
+
+
+1.下载maven
+	a、配置JAVA_HOME
+	b、配置MAVEN_HOME     D:\maven\apache-maven-3.6.3
+		M2_HOME
+	c、配置path                       %MAVEN_HOME%\bin
+	d、验证   mvn   -v
+	e、配置本地仓库
+		默认本地仓库C:/Users/asus/.m2/repository
+		修改本地仓库 <localRepository>C:\maven_ku</localRepository>
+
+2.使用maven
+	约定 优于配置
+	硬编码方式：job.setPath("d://abc")
+	配置方式：
+	 	job
+	conf.xml		<path>d://abc</path>
+	
+	约定：使用默认值d ：//abc
+
+	maven约定的目录结构：
+		项目
+		-src
+			--main
+			--test
+		pom.xml
+给当前项目放在本地仓库的坐标
+	<groupId>域名翻转.大的项目名</groupId>
+	<groupId>org.lanqiao.maven	</groupId>
+	<artifactId>子模块名</artifactId>
+	<artifactId>HellloWorld</artifactId>	
+	<version>版本号</version>
+	<version>0.0.1-SNAPSHOT</version>
+依赖：
+commons -fileupload.jar -->  commons-io.jar 
+A中的某些类，需要使用B中的某些类，则称为A依赖于B
+在maven项目中，如果要使用一个当时不存在的Jar或模块，则可以通过  依赖实现（去本地仓库，远程仓库去寻找）
+<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.0</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+1.依赖的范围，依赖的有效性：  <scope>test</scope>
+compile(默认)  test  provided
+2.依赖排除
+A.jar->B.jar
+当我们通过maven引入A.jar时，会自动引入B.jar（不要B.jar）
+ 				<!-- 排除依赖-->
+   			 	<exclusions>
+   			 		<exclusion>
+   			 			<groupId></groupId>
+   			 			<artifactId></artifactId>
+   			 		</exclusion>
+   			 	</exclusions>
+3.依赖的传递性
+a.jar ->b.jar ->c.jar
+
+要使a.jar ->c.jar   当且仅当b.jar依赖于c.jar的范围时compile
+3多个maven项目（模块）之间如何依赖：p项目依赖于q项目
+	q项目install 到本地仓库
+	p项目依赖<dependency>
+  			<groupId>org.zhaoning.maven</groupId>
+  			<artifactId>Helloworld2</artifactId>
+  			<version>0.0.1-SNAPSHOT</version>
+   		</dependency>	
+4.依赖原则：为了防止冲突
+	a.路径最短优先原则	
+	b.路径长度相同:
+		i.在同一个pom.xml文件中有两个相同的依赖（覆盖）：后面声明的依赖  会覆盖前面的（严禁在同一个pom中声明2个版本不同的依赖）
+		ii.如果是不同的pom.xml中有2个相同的依赖（优先）：先声明的依赖 会覆盖后声明的依赖
+继承：A依赖于B
+	则A可以使用B的所有依赖
+
+打包方式：
+	java工程--jar
+	web工程--war
+	父工程--pom
+继承实现步骤：
+	1 建立父工程：父工程的打包方式为pom
+	2 父工程的依赖要写在<dependencyManagement>
+				<dependencies>
+					<dependency>
+
+					</dependency>
+
+				</dependencies>
+			</dependencyManagement>
+	3 给当前工程 继承一个父工程
+			1  加入父工程坐标gav（如果父工程与子工程有相似的地方  可以省略子工程中的）				
+			2 当前工程的pom.xml到父工程的pom.xml之间的相对路径（alt+回车键）
+			<parent>
+				<g
+				<a
+				<v
+				<relativePath>../父类/pom.xml</relativePath>	
+
+			</parent>
+	4 在子类中声明使用 那些父类的依赖
+			<dependency>
+				<g
+				<a
+			</dependency>
+聚合：
+	Maven项目能够识别的：自身包含，本地仓库中的
+	Maven2依赖于Maven1，则在执行时：必须先将Maven1加入到本地仓库（install），之后才能执行Maven2
+	以上  前置工程的install操作，可以交由“聚合”一次性搞定
+
+聚合的使用：
+	在一个总工程中配置聚合：（聚合的配置  只能配置在打包方式为pom的Maven工程中）
+		<modules>
+			<module>项目的根路径</module>
+		</modules>
+配置完聚合之后，以后只要操作总工程，则会自动操作 改聚合中配置过的工程
+	聚合：	
+		Maven是将一个大工程拆分成  若干个子工程（子模块）
+		聚合可以将拆分的多个子工程合起来
+	继承：
+		父->子工程，可以通过父工程  统一管理版本依赖的版本
+
+	
+
+
+注意：clean命令 是删除target目录，并不是清理install存放在本地仓库中的文件
+
+
+maven常用命令：（第一次执行命令时，因为需要下载执行该命令的基础环境，所以会从中央仓库下载该环境到本地仓库     Maven基础组件，基础Jar）
+编译：
+mvn compile	只编译main目录中的java文件
+mvn test		测试
+mvn package	打包  打成jar/war
+mvn install 	将开发的模块 放入本地仓库 ，供其他模块使用（放入的位置 时通过gav决定）
+mvn clean	删除target目录（删除编译文件的目录）
+运行mvn命令，必须在pom.xml文件所在的目录
+
+
+仓库：
+	本地仓库
+	中央仓库
+	中央仓库镜像（对中央仓库的分流）
+	
+	私服nexus
+后三个是远程仓库
+
+在Eclipse中创建maven工程：
+1.配置maven：
+配置maven版本
+配置本地仓库：设置settings.xml
+在Eclipse中编写玩pom.xml依赖后，需要maven ->update  project
+
+
+目前的技术在开发中存在的问题：
+	1.一个项目就是一个工程
+		如果项目非常庞大，就不适合继续使用package来划分模块。最好是每一个模块对应一个工程，利于分工合作
+		一个项目借助maven就可以将一个项目拆分成多个工程
+	2.项目中需要的jar包必须手动“复制”，“粘贴”到WEB-INF/lib目录下
+		同样的jar包文件重复出现再不同的项目工程中，一方面浪费存储空间，另一方面也让工程比较臃肿。
+		借助maven，可以将jar包仅仅保存在“仓库”中，有需要使用的工程“引用”这个文件接口，并不需要真的把jar包复制过来。
+	3.jar包需要别人替我们准备好，或到官网下载。
+		不同技术的官网提供jar包下载的形式是不同的。
+		有些技术的官网就是通过Maven或SVN等专门的工具来提供下载的。
+		如果以不规范的方式下载jar包，那么其中的内容很可能是不正规的。
+		借助Maven可以以一种规范的方式下载jar包，因为所有知名框架或第三方工具的jar包以及按照统一的规范存放在了Maven的中央仓库中
+		tips：“统一的规范”对IT开发领域很重要
+
+
+package:
+resources
+compile
+test
+package
+
+maven生命周期：
+生命周期和构建的关系：
+生命周期中的顺序：a b c d e 
+当我们执行c命令，则实际执行的是a  b  c
+生命周期包含的阶段：3个阶段
+clean lifecycle	清理
+	pre-clean	            clean	post-clean
+default  lifecycle	默认
+	
+site   lifecycle	站点
+	pre-site               site	post-site 		site-deploy
+
+
+再次强调：增加依赖完  update
+统一项目的jdk：
+build path 删除旧版本，增加新版本
+或右键项目 属性 project factors   -java  version  改版本（之前存在要改的版本）
+
+通过maven统一jdk版本：
+设置settings.xml
+	 <profile>    
+        <id>jdk-1.8</id>    
+        <activation>    
+          <activeByDefault>true</activeByDefault>    
+          <jdk>1.8</jdk>    
+        </activation>    
+        <properties>    
+            <maven.compiler.source>1.8</maven.compiler.source>    
+            <maven.compiler.target>1.8</maven.compiler.target>    
+            <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>    
+        </properties>    
+    </profile>
+
+maven仓库：	
+	http://www.mvnrepository.com
+实际开发中，开发人员将自己的项目开发完毕后  打成war包  交给实施人员去部署
+
+
+
+
+

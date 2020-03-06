@@ -1,0 +1,86 @@
+git ：版本控制软件
+分布式版本控制软件
+
+本地上有很多分支（默认主分支master）
+命令：
+git status:查看文件状况
+git add：将   本地文件    增加到缓存区
+git commit -m""：将   暂存区的内容    提交到  本地仓库
+git push：将  本地仓库的内容    推送到   远程仓库
+
+git pull：将远程仓库的内容  拉取到    本地仓库
+
+
+安装时：Use git from git bash only....  其他默认下一步
+配置path：D:\git\Git\bin
+配置git：
+右键 git bash
+
+git config --global user.name  "zxq"
+git config --global user.email  "366111937@qq.com"
+
+查看是否配好：
+C:\Users\asus\.gitconfig
+
+搭建git服务器（远程仓库） : 统一的托管网站（https://github.com/）
+
+为了在本地 和远程仓库之间进行 免密钥登录 ，可以配置ssh
+
+配置ssh：
+
+先在本地配置，在发送给远程
+本地配置：
+ ssh-keygen -t rsa -C 366111937@qq.com  一直回车
+
+发送给远程：
+settings-->ssh and gpg keys --new ssh --title 任意  key中输入 刚才在本地生成的ssh；
+将本地生成的id_rsa.pub内容复制到远程的key中
+
+测试通信：
+ssh -T git@github.com
+
+如果本地和远程成功通信，则可以在/ssh目录中发现known_hosts文件
+如果失败：多尝试几次，检查回车符。
+
+在本地新建git项目，并发送给远程
+
+在项目根目录 右键gitbash  输入  git init
+
+在远程建立个git项目
+new 新建项目 - 生成 
+
+本地项目-远程项目关联
+git remote add origin git@github.com:zxq-znn/mygit.git
+git remote add origin git@github.com:zxq-znn/second.git
+第一次发布项目（本地-远程）
+git add .	//文件--暂存区
+git commit  -m"注释内容"  //暂存区--本地分支（默认master）
+git push -u origin master
+
+
+第一次下载项目（远程-本地）
+git clone  git@github.com:zxq-znn/mygit.git
+git clone  git@github.com:zxq-znn/second.git
+
+提交（本地-远程）
+(在当前工作目录  右键-gitbash)
+git add
+git commit -m"注释"
+git push origin master
+
+更新（远程-本地）
+git pull
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+

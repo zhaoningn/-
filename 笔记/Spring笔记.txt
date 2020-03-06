@@ -1,0 +1,135 @@
+IOC:控制翻转（DI：依赖注入）
+
+1.搭建Spring环境
+下载jar包
+https://maven.springframework.org/release/org/springframework/spring/
+开发Spring至少需要使用的jar（5+1）：
+spring-aop.jar		 开发AOP特性时需要的JAR
+spring-beans.jar		处理Bean的jar
+spring-context.jar		处理spring上下文的jar
+spring-core.jar		spring核心jar
+spring-expression.jar	spring表达式
+三方提供的日志jar
+commons-logging.jar	日志jar
+
+spring的maven依赖
+<groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>5.2.1.RELEASE</version>
+
+2.编写配置文件
+为了编写时有一些提示，自动生成一些配置信息	
+方式一：		
+	可以给Eclipse增加 支持spring的插件：spring tool suite（https://spring.io/tools/sts/all）
+					下载完再Eclipse的Help->install new software
+方式二：
+	下载sts
+
+
+新建：XMl configuration ---> Spring config  --->名字：applicationContext.xml
+
+3.开发Spring程序（IOC）
+	spring ioc容器：1.创建对象
+		          2.给对象的属性赋值
+
+		// Spring 上下文对象：context
+		ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		//执行从springIOC容器中获取一个id为student的对象		
+		Student student = (Student) context.getBean("student");
+
+
+
+IOC：控制反转（为了更加清晰的理解ioc，ioc在一次大会上更名为DI：依赖注入）
+	控制反转：将 创建对象和创建属性值的方式 进行了反转，从new，setXxx()  反转为 从springIoc容器中getBean()
+	依赖注入：将   属性值   注入给了  属性   ，将   属性   注入给了bean ，将bean 注入给了ioc容器；
+总结：ioc/di  无论要什么对象，都可以直接去springioc容器中获取，而不需要自己操作(new/setXxx())
+
+因此之后的ioc分为两步：1.先给springioc中存放对象并赋值  2 拿
+
+
+IOC容器赋值：如果是简单类型（8个基本+String），value 字面值
+		如果是对象类型用 ref="需要引用的id值"，因此实现了对象与对象之间的依赖关系
+
+conext.getBean(需要获取的bean的id值)
+
+依赖注入的三种方式：
+
+1.set方式的依赖注入：通过setXxx()赋值
+赋值，默认使用的是set方法（）
+依赖注入底层是通过反射实现的。
+
+2.构造器注入：通过构造方法赋值
+<constructor-arg value="ww"></constructor-arg>
+<constructor-arg value="55"></constructor-arg>
+
+		<!--    也可以都加在一起
+		不按顺序
+		<constructor-arg value="55" index = "1"></constructor-arg>
+		<constructor-arg value="ww" index = "0"></constructor-arg>
+		
+		<constructor-arg value="55" name = "age"></constructor-arg>
+		<constructor-arg value="ww" name = "name"></constructor-arg>
+		
+		
+		<constructor-arg value="55" type ="int"></constructor-arg>
+		<constructor-arg value="ww" type ="String""></constructor-arg>
+		 -->
+
+
+3.p命名空间注入
+xmlns:p="http://www.springframework.org/schema/p"
+
+<bean id ="course"  class="org.zhaoning.entity.Course" p:courseHour="300" p:courseName="hadoop" p:teacher-ref="teacher"></bean>
+p之间要有空格
+
+
+注意：
+无论是String还是Int/short/long，在赋值时都是 value=“值” ，因此建议 此种情况 需要配合name/type进行区分
+
+set, list ,数组  各自都有自己的标签<set><list><array>,但是也可以混着用
+
+给对象类型赋值null：
+		<property name="name">
+			<null/>			没有value
+		</property>
+赋空值:
+		<property name="name">
+			<value></value>
+		</property>
+
+在ioc中定义bean的前提：该bean的类，必须提供了无参构造。
+
+自动装配（只试用于引用类型）：
+	约定优于配置
+自动装配：
+	<bean class="...."   autowire ="byName/byType/constructor/no">  byName本质是byId
+byName: 自动寻找 其他bean的id值=该类的属性名
+byType：其他bean的类型（class）是否与该类的ref属性类型一致（注意：此种方式必须满足 当前ioc容器中 只能有一个bean满足条件）
+constructor：其他bean的类型（class）是否与该类的构造方法参数 的类型一致：本质就是byType。
+
+可以在头文件中  一次性将该ioc容器的所有bean  统一设置成自动装配：
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd"
+	default-autowire="byName">
+自动装配虽然可以减少代码量，但是会降低程序的可读性，使用时需要谨慎。
+
+
+
+使用注解定义bean：通过注解的形式 将bean以及相应的属性值  放入ioc容器
+
+
+	
+
+
+		
+
+
+
+
+
+
+
+
+

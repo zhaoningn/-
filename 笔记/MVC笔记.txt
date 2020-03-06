@@ -1,0 +1,83 @@
+MVC设计模型
+M：Model，模型  一个功能 JavaBean实现
+ V：View，视图   用于展示，以及与用户交互。html、css、js、jsp、jQuery等前段技术实现。
+ C：Controller，控制器：接受（视图）请求，将请求跳转到模型进行处理，模型处理完毕后，再讲处理的结果返回给请求处。
+		     可以用jsp实现，但是一般建议用Servlet实现控制器。
+jsp->Java(Servlet)->JSP
+
+
+View 发出请求 --> Controller 选择 请求对应的模型  进行处理 --> Model 使用特定的模型 进行数据处理 -->返回处理结果给Controller-->View 响应 （选择成功js页面进行显示）
+
+
+
+
+一.  Servlet:
+  
+Java类必须符合一定的 规范：
+	a.必须继承 java.servlet.http.HttpServlet
+	b.重写其中的doGet()或doPost()方法
+
+doGet() ：接受 并处理所有get提交方式的请求
+doPost() ：接受 并处理所有post提交方式的请求
+
+Servlet要想使用，必须配置
+Servlet2.5 : web.xml
+Servlet3.0 : @WebServlet
+
+Servlet2.0：
+用户发出请求    --> 	 被 servler-mapping中的 url-pattern 拦截   -->   找servler-mapping中的 servler-name   --> 找servlet中的name   -->  找servlet中的servlet-class
+
+1.手动创建第一个Servlet
+	编写一个类，继承HttpServlet
+	重写doGet(),doPost()方法
+	编写web，xml中的servlet映射关系
+2.借助Eclipse快速生成Servlet
+直接新建Servlet即可
+
+
+Servlet2.5 与Servlet3.0 的区别：
+Servlet3.0不需要在web.xml中配置，但需要在Servlet类的定义处之上编写注解@WebServlet(url-pattern的值)
+匹配流程：请求地址 与@WebServlet中的值 进行匹配，如果匹配成功，则说明 请求的就是该注解所对应的类
+
+
+3.项目根目录：WebContent、src（所有的构建路径 ）
+例如：
+	WebContent  中有一个文件index.jsp
+	src中有一个Servlet.java
+	如果：index.jsp中请求<a href = "asd"> .....</a> ，则 寻找范围：即会在src根目录中找  也会在WebContent根目录中找
+	如果：index.jsp中请求<a href = "a/asd"> .....</a>，则 寻找范围： 先在src或WebContent根目录中找a目录，然后在a目录中找asd
+
+Web.xml 中的/：代表项目根路径
+	http://localhost:8888/Servlet30Project/
+jsp中的/：代表服务器根路径
+	http://localhost:8888/
+
+
+构建路径和WebContent都是根路径
+
+
+4.Servlet生命周期
+加载：
+初始化：init() ,该方法会在Servlet 被加载并实例化的以后 执行
+服务：service()  ->doGet()   doPost()  
+销毁：destroy() ,Servlet被系统回收时执行
+卸载：
+
+
+init() :
+	默认第一次访问Servlet时会被执行
+	可以修改为tomca启动时自动执行
+		2.5版本     <servlet>
+   			 <servlet-name>a</servlet-name>
+			  <servlet-class>      org.lanqiao.Servlet.WelcomeServlet	</servlet-class>
+   			 <load-on-startup>1</load-on-startup>
+    
+ 			 </servlet>
+		3.0版本
+			@WebServlet(value="/WelcomeServlet",loadOnStartup=1)
+         
+service()  ->doGet()   doPost()  ：调用几次，执行几次
+destroy():关闭tomcat服务器时，执行一次。
+
+
+

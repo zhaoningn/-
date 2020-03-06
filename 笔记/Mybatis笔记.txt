@@ -1,0 +1,499 @@
+MyBatis可以简化JDBC操作，实现数据的持久化（将数据存入数据库）
+	ORM：Object Relational Mapping   ORM可以将对象和表一 一映射起来
+		person对象    person表
+	ORM：概念，
+	Mybatis是ORM的实现
+	ORM可以使得开发人员 像操作对象一样  操作数据库表。
+
+
+MyBatis的环境搭建
+	第一步：创建maven工程并导入坐标
+	第二步：创建实体类和dao的接口
+	第三步：创建Mybatis的主配置文件
+			SqlMapConifg.xml
+	第四步：创建映射配置文件
+			InterfacePersonDao.xml
+
+	环境搭建的注意事项：
+	第一个：创建InterfacePersonDao.xml  和InterfacePersonDao.java时 名称是为了和我们之前的知识保持一致
+		在Mybatis中  它把持久层的操作接口名称和映射文件也叫做：Mapper
+	第二个：mybatis的映射配置文件位置必须和dao接口的包结构相同。
+	第三个：映射配置文件的mapper标签namespace属性的取值必须是dao接口的全限定类名
+	第四个：映射配置文件的操作配置，id属性的取值必须是dao接口的方法名
+
+	当我们遵从了第二，三，四点之后，我们在开发中就无需在写dao的实现类
+
+
+mybatis的入门案例：
+	第一步：读取配置文件
+	第二步：创建SqlSessionFactory工厂
+	第三步：创建SqlSession
+	第四步：创建Dao接口的代理对象
+	第五步：执行dao中的方法
+	第六步：释放资源
+注意事项：
+	不要忘记在映射配置中告知mybatis要封装到那个实体类中
+	配置的方式：制定实体类的全限定类名
+
+
+	
+
+mybatis基于注解的入门案例：
+	把InterfacePersonDao.xml移除，在dao接口的方法上使用@Select注解，并指定sql语句
+	同时需要在SqlMapConfig.xml中使用mapper配置时，使用class属性指定dao接口的全限定类名
+
+
+		// 读取配置文件
+		InputStream inputStream = Resources.getResourceAsStream("conf.xml");	
+		// 创建Sqlsessiontory工厂
+		SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();    		//创建工厂mybatis使用了构建者模式
+		SqlSessionFactory factory = builder.build(inputStream);			//构建者模式：把对象的创建细节隐藏，使用者直接调用方法即可拿到对象
+		// 使用工厂生产SqlSession对象
+		SqlSession session = factory.openSession();			//生产SqlSession使用了工厂模式	优势：解耦（降低类之间的依赖关系）
+		// 使用SqlSession创建Dao接口的代理对象
+		InterfacePersonDao interfacePersonDao = session.getMapper(InterfacePersonDao.class);	//创建Dao接口实现类使用了代理模式   优势：不修改源码的基础上对已有方法的增强
+		// 使用代理对象执行方法
+		List<Person> persons = interfacePersonDao.findAll();
+		for (Person person : persons) {
+			System.out.println(person);
+		}
+		// 释放资源
+		session.close();
+		inputStream.close();
+
+自定义mybatis的分析：
+	mybatis在使用代理dao的方式实现增删改查时做了什么？
+		两件事：
+			第一：创建代理对象
+			第二：在代理对象中调用selectList
+
+开发mybatis程序：
+1.配置mybatis
+conf.xml：配置数据库信息  和需要加载的映射文件
+
+表  --  类
+映射文件xxMapper.xml：增删改查标签 写sql语句
+
+测试类：
+session.selectOne(“需要查询的sql的namespace.id”,“sql的参数值”)
+
+一，基础方式的增删改查：
+mybatis约定：
+	输入参数和输出参数在形式上只能有一个
+	
+	如果输入参数是简单类型（8个基本类型+String）是可以使用任何占位符，#{xxx}
+	如果是对象类型，则必须是属性名#{属性名}
+
+
+	输出参数：如果返回值类型是一个对象（如Person），则无论返回一个还是多个，在resultType都写org.zhaoning.entity.Person
+
+
+注意事项：
+a.  如果使用的事物提交方式为JDBC  则需要手动提交，即session.commit();
+b.  所有的标签<select><update>等，都必须有sql语句，但是sql参数值可选
+	select * from student where id = #{id}
+sql有参数：session.insert(statement, 参数值)
+sql没参数：session.insert(statement)
+
+二 ,  mapper 动态代理方式的crud（Mybatis接口开发）：
+
+原则：约定优于配置 
+
+硬编码方式
+	abc.java
+		Configuration conf = new Configuration();
+		conf.setName(myProject);
+配置形式：abc.xml   
+		<name> myProject</name> 
+约定：默认值就是myProject
+
+具体实现步骤：
+1.基础环境：mybatis.jar  ojdbc.jar  conf.xml   mapper.xml
+2.不同之处
+	约定的目标：省略statement，即根据约定 直接可以定位出sql语句
+	
+	a.接口  接口中的方法必须遵循以下约定
+	 * 约定
+	 * 1.方法名和mapper.xm文件中标签的id值相同
+	 * 2.方法的输入参数和mapper.xml文件中标签的parameterType类型一致
+	 * 3.方法的返回值和mapper.xml文件中标签的resultType类型一致
+除了以上约定，要实现 接口中的方法  和Mapper.xml 中sql标签一一对应，还需要以下1点：
+	1.namespace的值，就是 接口的全类名（接口---mapper.xml 一一对应）
+匹配的过程：（约定的过程）
+1、根据 接口名 找到 mapper.xml文件  （根据的是 namespace = 接口全类名）
+2、根据 接口的方法名  找到 mapper.xml 文件中的sql标签（方法名=sql标签的id值 、参数=sql标签的parameterType、返回值=sql标签的resultType）
+以上2点可以保证：当我们调用接口中的方法时，程序能自动定位到 某一个Mapper.xml文件中的sql标签
+
+习惯：sql映射文件（mapper.xml）和接口放在同一个包中  （注意修改conf.xml中加载mapper.xml文件的路径）
+
+以上：可以通过接口的方法-->sql语句
+
+执行：
+	PersonMapper personMapper = session.getMapper(PersonMapper.class);
+	personMapper .方法();
+
+
+通过session对象获取接口，在调用接口中的方法，程序会自动执行该方式对应的sql；
+
+优化：
+	1、可以将配置信息 单独放入db.properties 文件 ，然后再动态引入
+		db.properties:
+		   k --- v
+
+	<configuration>
+	<properties resource="bd.properties"></properties>
+	引入之后，使用${key}
+	2、别名
+		a、设置单个别名
+			<!-- 设置别名 -->
+				<typeAliases>
+				<!-- 单个别名 -->
+				<typeAlias type="org.zhaoning.entity.Person" alias = "Person"/>
+				<!-- 多个别名   该包下都有一个别名  就是本身 -->
+				<package name="org.zhaoning.entity"/>
+	
+
+
+				</typeAliases>
+2、自定义Mybatis类型转换器
+	java  -  数据库（jdbc类型）
+
+示例：
+实体类Person ：  boolean     Sex
+			true:男
+			faluse:女
+
+表person： number	  sex
+		1：男
+		0：女
+自定义类型转换器（boolean -- number ）步骤：
+	a、创建转换器：需要实现TypeHandler接口
+		通过阅读源码发现，此接口有一个实现类BaseTypeHandler，因此 要实现类型转换有2种选择：
+			i、实现接口TypeHandler
+			ii、继承BaseTypeHandler
+
+	b、配置	
+		conf.xml
+需要注意的问题：INTEGER
+
+insert into person(id,name,age,sex) values(#{id},#{name},#{age},#{sex ,javaType =boolean,jdbcType=INTEGER })
+
+注意#{id}中存放的是 属性值，需要严格区分大小写。
+
+  <!-- 查询   使用类型转换器 
+  1、 如果类中的属性和表中的字段类型能够合理识别  则可是使用 resultType，否则使用resultMap 
+  2、 如果类中的数姓名  和表中的字段名能合理识别 （id - id） 则可以使用resultType，否则使用resultMap
+  -->
+  <resultMap type="person" id="personResult">
+  	  <id property = "id"  column = "id"/>
+  	  <result property = "name"  column = "name"/>
+      	<result property = "age"  column = "age"/>
+      	<result property = "sex"  column = "sex" javaType="boolean" jdbcType="INTEGER"/>
+  </resultMap>
+  
+   <select id="queryPersonByConverter" resultMap="personResult" parameterType="int">
+   		 select * from person where id =#{id} 
+  </select>
+
+
+输入参数：parameterType
+1.类型为 简单类型（8个基本类型+String）
+	i、#{xxx}    语法上是任意值
+	ii、${value},其中的标识符只能是value
+两者不同：
+#{}自动给String类型加上'' (自动类型转换)
+${}原样输出
+
+ select * from person where id =#{id} 
+ select * from person where id ='${value}'
+
+动态排序：
+select  id, name,age from person order by ${value} asc
+
+#{}可以防止SQL注入
+${}不防止
+
+两者相同：
+都可以 获取对象的值（嵌套类型对象）
+
+i、模糊查询
+	方式一：
+		person.setName("%w%")
+		select id,name,age  from person where  name like #{name}
+	方式二：
+		person.setName("w")
+		select id,name,age  from person where  name like '%${name}%'
+ii、嵌套类型查询
+
+
+输入对象为HashMap：
+where stuage = #{age}
+用map中的key的值 匹配 占位符#{age}，如果匹配成功  就用map的value替换占位符
+
+
+2.对象类型：
+#{属性名}
+#{属性名}
+
+mybatis调用存储过程
+1、查询某个年级的学生总数
+输入：年级
+输出：该年级的学生总数 
+
+
+
+
+
+输出参数：
+resultType
+
+1、简单类型（8个基本类型+string）
+2、实体对象类型
+3、实体对象类型的集合，但是resultType还是写 集合的元素类型
+4、输出参数为HashMap
+	HashMap本身是一个集合，可以存放多个元素，但是根据提示发现，返回值为HashMap时，查询的结果只能是一个
+
+	一个HashMap对应一个学生的多个元素（多个属性）【一个map，一个学生】
+resultMap：
+
+ <!-- 查询   使用类型转换器 
+  1、 如果类中的属性和表中的字段类型能够合理识别  则可是使用 resultType，否则使用resultMap 
+  2、 如果类中的数姓名  和表中的字段名能合理识别 （id - id） 则可以使用resultType，否则使用resultMap
+  -->
+  <resultMap type="person" id="personResult">
+  	  <id property = "id"  column = "id"/>
+  	  <result property = "name"  column = "name"/>
+      	<result property = "age"  column = "age"/>
+      	<result property = "sex"  column = "sex" javaType="boolean" jdbcType="INTEGER"/>
+  </resultMap>
+  
+   <select id="queryPersonByConverter" resultMap="personResult" parameterType="int">
+   		 select * from person where id =#{id} 
+  </select>
+
+注意：当属性名 和字段名不一致时，除了使用resultMap以外，还可以使用resultType+HashMap;
+
+<select id = "queryPerson"  parameterType = "int " resultType = "HashMap">
+	selsect  id "Pid",name "Pname"  from person where id = #{id}
+</select>
+
+注意：如果有10个字段 ，一旦发现结果始终为默认值（0   0.0   null） 则可能是表的字段和类的属性名字写错
+ 
+
+<where>会自动处理第一个<if>标签中的and，但不会处理之后<if>中的and
+<foreach>
+查询学号为1 ， 2 的学生信息
+select id,name  from person where id in(1,2)
+
+<foreach>迭代的类型：数组，对象数组，集合，属性（Grade类：List<Integer> ids）
+
+
+数组：无论编写代码时，传递的是什么参数名，在mappe.xml中  必须用array代替该数组
+
+集合：无论编写代码时，传递的是什么参数名，在mappe.xml中  必须用list代替该数组
+
+对象数组：
+person[] persons = {person1,person2,person3}
+<select id="queryPersonByobj" parameterType="object[]" resultType="person">
+        select id,name,age from person
+        <where>
+            <if test="array!= null and array.length>0">
+                <foreach collection="array" open=" and id in (" close=")" item="person" separator=",">
+                    #{person.id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+sql片段：
+	java：方法
+	数据库：存储过程，存储函数
+	Mybatis：sql片段
+
+a、提取相似代码
+b、引用
+
+
+关联查询：
+一对一：
+a、业务扩展类
+	核心：用resultType指定类的属性  包含 多表查询的所有字段
+b、resultMap
+	i、通过属性成员 将2个类建立起联系
+	ii、<resultMap id="per_card" type="person">
+        			<id property="id" column="id"/>
+       			 <result property="name" column="name"/>
+       			 <result property="age" column="age"/>
+		<!-- 一对一时，对象成员使用 association映射：javaType指定该属性的类型 -->
+        			association property="card" javaType="personcard">
+        			<id property="cardid" column="cardid"/>
+       			 <result property="cardinfo" column="cardinfo"/>
+      		  </association >
+ 	</resultMap>
+
+一对多
+
+（mybatis认为  多对一，多对多的本质就是 一对多的变化）
+
+日志：
+	Log4j：log4j.jar
+
+开启日志：
+	如果不指定，mybatis就会根据以下顺序  寻找日志
+	SLF4J  、 Apache Commons Logging 、Log4j 2、Log4j 、JDK logging
+a  引入依赖  log4.jar
+b  开启依赖
+	<settings>
+	<!--        开启日志-->
+        <setting name="logImpl" value="LOG4J"/>
+
+   	 </settings>
+c 编写配置日志输出文件
+log4j.properties
+	日志级别：
+		DEBUG<INFO<WARN<ERROR
+如果设置为info，则只显示 info及以上级别的信息；
+建议：在开发时设置debug，在运行时设置为info或以上
+
+log4j.properties内容：
+
+log4j.rootLogger=DEBUG, stdout
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
+
+可以通过日志信息，详细的阅读mybatis执行情况（观察mybatis实际执行sql语句  以及sql中的参数和返回结果）
+
+
+延迟加载：
+
+一对一、 一对多、多对一、多对多
+一对多：班级--学生  
+如果不采用延迟加载（即为立即加载），查询时会将 一和 多 都查询 ，班级，班级中的所有学生。
+如果想要 暂时只查询1的一方 而 多的一方 先不查询  而是在需要的时候再去查询 -->延迟加载
+
+一对一：学生，学生证
+
+mybatis 中使用了延迟加载，需要先配置：
+	<settings>
+<!--        开启日志-->
+        <setting name="logImpl" value="LOG4J"/>
+	<!-- 开启延迟加载-->
+        <setting name="lazyLoadingEnabled" value="true"/>
+	<!-- 关闭立即加载-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+    	</settings>
+
+如果增加了mapper.xml 要修改conf.xml配置文件  (将新增的mapper.xml加载进去）
+
+通过debug可以发现 ，如果程序只需要学生，则只向数据库发送了查询学生的sql，
+	当我们后续需要用到学生证的时候，在第二次发送 查询学生证的sql
+
+一对多：和一对一的延迟加载配置方法相同
+
+延迟加载的步骤：
+	1、开启延迟加载conf.xml配置settings
+	2、配置mapper.xml
+		写两个mapper.xml
+			班级mapper.xml
+				先查班级
+				查询学生的sql通过 select属性指定，并且通过column指定外键
+			学生mapper.xml	
+
+
+
+1、查询缓存
+	一级缓存：同一个SqlSession对象
+	Mybatis默认开启一级缓存，如果用同样的SqlSession对象查询相同的数据，则只会在第一次查询时 向数据库发送sq语句 放入到sqlsession中（作为缓存存在）
+		后续再次查询该对象时，则直接从缓存中查询该对象即可（即省略了数据库的访问）
+
+	二级缓存：（默认没有开启二级缓存）
+		开启二级缓存：
+			        <setting name="cacheEnabled" value="true"/>
+
+				在Mapper.xml文件中加<cache/>
+
+				mybatis的二级缓存 是将对象放入硬盘
+					序列化：内存  硬盘
+					反序列化：硬盘  内存
+			准备缓存的对象，必须实现了序列化接口
+			触发将对象写入二级缓存的时机：sqlsession对象的close()方法
+	
+
+		Mybatis自带二级缓存：同一个namespace生成的mapper对象
+			回顾：namespace的值 就是接口的全类名（包名.类名），通过接口可以产生代理对象（personMapper对象）
+				结论：namespace决定了personMapper对象的产生
+				最终结论：只要产生的xxxMapper对象  来自于同一个namespace ，则这些对象 共享二级缓存。
+
+
+				
+		
+		
+		
+
+
+禁用二级缓存：
+	select中加 usecache = “false”
+清理：1、commit();（执行增删改时，会清理掉缓存：设计原因  防止脏数据）
+		在二级缓存中，commit()不能是查询自身的commit();
+	commit会清理一级缓存和二级缓存：但是 清理二级缓存时，不能是查询自身的commit；
+       2、在select标签中增加属性flushCache = "true"
+
+
+
+		三方提供的二级缓存:
+			echache    memcache
+		要想整合三方提供的缓存二级缓存（或自定义缓存），必须实现Cache接口
+		整合ehcache二级缓存：
+				1.
+				Ehcache-core.jar
+				mybatis-Ehcache.jar
+				slf4j-api.jar
+				
+				
+				2.编写ehcache配置文件  Ehcache.xml
+		
+				3.开启EhCache二级缓存
+			
+					在xxxMaper.xml中开启
+						<cache type="org.zhaoning.ehcache.Ehcache.xml">
+					</cache>
+
+
+逆向工程
+	表，类，接口，mapper.xml四者密切相关，因此 当知道一个的时候 其他三个应该可以自动生成。
+	表生成其他三个
+
+	实现步骤：
+		1,  mybatis-generator-core.jar ,mybaits.jar  ojdbc.jar
+		2, 逆向工程的配置文件generator.xml
+		3, 执行
+		
+
+
+
+
+
+
+mvn install:install-file -Dfile=C:\Users\asus\Desktop\ojdbc14.jar -DgroupId=com.oracle -DartifactId=ojdbc14 -Dversion=10.2.0.4.0 -Dpackaging=jar -DgeneratePom=true 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

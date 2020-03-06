@@ -1,0 +1,58 @@
+JSP就是在html中嵌套的Java代码，因此 Java代码可以写在jsp中 （<%    .....    %>）
+
+导包操作： web项目-->jar复制到 WEB-INF/lib
+
+核心：就是将 Java中的JDBC代码，复制到jsp中
+
+
+<%@ page import= "java.sql.*"%>
+
+
+注意 ：如果jsp出现错误 ：The import Xxx type is not be resolved ...
+
+解决方案  
+	1.可能是JDK，tomact版本问题     右击项目名 -->build path --->config  bulid path  （将报错的删除  重新导入）
+	2.清空各种缓存  project -->clear       右击cat-->clear tomcat work Dire
+
+
+JavaBean  用Java语言编写的可重用组件
+将jsp中 登录操作的代码 转移到了loginDao.java : 其中LoginDao类  就称为JavaBean 
+
+JavaBean 的作用：1.减轻jsp的复杂度 2.提高代码的复用（以后任何地方的 登录操作，都可以通过调用LoginDao实现）
+JavaBean（就是一个java类） 的定义：满足以下2点，就可以称为JavaBean
+		1，public修饰的类，public无参构造
+		2，所有属性（如果有） 都是private，并且提供set/get （如果boolean 则get可以替换成is）
+使用层面，Java分为2大类：
+a.  封装业务逻辑的JavaBean （loginDao.java封装了登录逻辑）		逻辑
+	可以将jsp中的JDBC代码，封装到login.java类中
+
+b. 封装数据的JavaBean （实体类，Student.java  Person.java）		数据
+	对应于数据库中的一张表
+	Login login  = new Login（uname，upwd）;	即用Login对象 封装了2个数据
+封装数据的JavaBean对应于数据库中的一张表（Login（name，pwd））
+封装业务逻辑的JavaBean 用于操作一个封装数据的JavaBean
+
+
+可以发现，JavaBean可以简化 代码（jsp->jsp+java）,提供代码复用
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

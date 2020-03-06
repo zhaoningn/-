@@ -1,0 +1,45 @@
+1.加入接口
+	建议面向接口开发，先接口-再实现类
+	--service、dao加入接口
+	--接口与实现类的命名规范
+		接口：interface		起名     	I实体类Service 	              IStudentService
+					           	I实体类Dao		IStudentDao
+		实现类：implement		起名    	实体类ServiceImpl	 	StudentServiceImpl
+						实体类Dao		StudentDaoImpl
+	
+		接口所在的包：    xxx.service		xxx.dao
+		实现类所在的包：xxx.service.impl	xxx.dao.impl
+2.DBUtil	通用的数据库帮助类，可以简化Dao层的代码量
+帮助类  一般写在xxx.util包中	
+
+
+方法重构：将多个方法的共同代码 提炼出来 ，单独写在一个方法中
+
+	A(){
+		C(){
+		....
+
+		}
+	
+	
+	}
+	
+	B(){
+
+		C(){
+		...
+		
+		}
+
+
+	}
+	C(){
+
+	...		
+
+	}
+
+
+
+
+

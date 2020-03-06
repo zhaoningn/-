@@ -1,0 +1,91 @@
+sqlplus  scott/tiger ;    连接数据库
+
+show user；	 展示当前用户
+
+select * from tab;	查看系统中的表
+
+select empno as "编号" , ename "姓名" ,  job 月薪 from emp ;  给字段（列名）起别称
+
+host cls ;     	清屏
+
+基本概念 ：
+	实体：java中的类（student）
+	记录：java中的对象（per(zs,23,170))
+	字段：Java的属性，列
+	表：同一个实体中，所有的记录、字段组合起来 就是一张表
+
+desc emp;   显示字段
+
+number(5） 表示位数   -->int ,short,float,double,long,byte
+number(7,2)   前面表示7位整数   后面表示其中有2小数
+
+date   时间类型
+
+varchar2  表示字符类型   -->String
+
+
+范围查询：数字/日期
+	between 小  and   大
+>=小  and <=大
+
+模糊查询：字符/数字/日期
+	like
+		配合通配符使用：_ :一个字符
+			          %：任意个字符
+	ename like..
+
+	姓名中第二个字母是M的员工信息：
+		select * from emp where ename like '_M%';
+	姓名长度>6的员工信息 ： >6  >=7
+		select * from emp where ename like '______%';
+	姓名中包含下划线
+		select * from emp where ename like  '%\_%'   escape '\'  ;     转义
+
+	not   in （）；  不能出现null 
+
+ 
+
+排序：
+	order by
+select * from emp order by sal  asc ;
+默认asc  升序  
+     desc 降序   
+排序时  null最大
+select * from emp order by sal  asc nulls last ;  null 变最小
+
+多列排序：
+select * from emp order by sal  desc， hiredate asc ;
+
+
+
+函数:
+	单行函数：一次性操作一行    
+	多行函数：一次性操作多行
+
+单行函数： 字符函数   数值函数 日期函数 转换函数 通用函数
+字符函数： lower  upper    initcap
+
+
+截取字符串
+	substr(str,begin,len) :从一开始数
+
+length字符数/lengthb 字节数
+
+英文/数字
+如果中文/符号：
+	utf-8编码格式下：一个汉字/符号 占3个字节
+	gbk：一个汉字/符号 占2个字节
+           selsect length('西安') , lengthb('西安') from dual ;
+		2		6
+
+select  insrt('str','substr')  from dual    // substr在str的什么位置
+
+select lpad('hello',10,'*')  左 ， rpad('hello',10,'*')  右  from dual ；
+            ******hello		hello*****
+
+trim 去任意
+select trim ('x' from 'xxxxxhello worldxxxxx') from dual;    //去掉x
+
+replace 替换
+select 
+

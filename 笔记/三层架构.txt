@@ -1,0 +1,45 @@
+1.三层架构：
+	与MVC模式的目标一致，都是为了 解耦合 ，提高代码复用
+	区别：二者对项目理解不同。
+2.三层组成：
+	1. 表示层（USL,User Show Layer    视图层）
+	-前台：对应于MVC中的View,用于和用户交互，界面的显示
+
+		jsp,js,html,css,jquery的web前段技术
+
+		代码位置：WebContent
+
+	-后台：对应于MVC中Controller，用于控制跳转，调用业务逻辑层
+
+		Servlet（SpringMVC，Struts2）
+
+		位于xxx.servlet包中
+
+	2. 业务逻辑层（BLL, Business Logic Layer   Service层）
+		--接收表示层的请求，调用
+		--组装数据访问层，逻辑性的操作，（增删改查，删=查+删）	
+		一般位于xxx.service包中（也可以：xxx.manager ，xx.bll ）
+	
+	3. 数据访问层（DAL, Date Access Layer  Dao层）
+		--直接访问数据库的操作，原子性的操作（增删改查）
+		一般位于 xxx.dao包
+
+
+三层之间的关系：
+	上层将请求传递给下层，下层处理后  返回给上层
+	上层依赖于下层，依赖：代码的理解，就是持有成员变量 或者理解为 : 有A的前提是必须现有B
+Servlet：一个Servlet对应于一个功能，因此  如果有增删改查，则需要创建4个servlet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
